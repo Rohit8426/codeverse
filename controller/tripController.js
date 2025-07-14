@@ -1,15 +1,18 @@
 const Trip = require("../models/trip");
+const moment = require("moment");
 
 const createTrip = async (req, res) => {
   try {
     const { name, destination, city, country, startDate, endDate } = req.body;
+    console.log("req.body", req.body);
+
     const trip = new Trip({
       name,
       destination,
       city,
       country,
-      startDate,
-      endDate,
+      startDate: moment(startDate, "DD-MM-YYYY").toDate(),
+      endDate: moment(endDate, "DD-MM-YYYY").toDate(),
     });
     await trip.save();
     res.status(201).json({ message: "Trip created successfully", trip });
@@ -52,15 +55,14 @@ const updateTrip = async (req, res) => {
     trip.destination = destination;
     trip.city = city;
     trip.country = country;
-    trip.startDate = startDate;
-    trip.endDate = endDate;
-    await trip.save();
+    trip.startDate = moment(startDate, "DD-MM-YYYY").toDate(),
+    trip.endDate = moment(endDate, "DD-MM-YYYY").toDate(),
+      await trip.save();
     res.status(200).json({ message: "Trip updated successfully", trip });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 const deleteTrip = async (req, res) => {
   try {

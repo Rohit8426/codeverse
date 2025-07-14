@@ -1,29 +1,25 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-exports.authenticationToken = (req, res, next) => {
-  req.headers.authorization?.split(" ")[1];
-  if (!token) return;
-  res.status(401).json({
-    success: false,
-    message: "You are not logged in",
-  });
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err)
-      return res.status(403).json({
-        success: false,
-        message: "You are not logged in",
-      });
+exports.autherize = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized: Token missing or malformed" });
+    }
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized: User not found" });
+    }
     req.user = user;
     next();
-  });
+  } catch (err) {
+    return res.status(401).json({ message: "Unauthorized", error: err.message });
+  }
 };
 
-exports.autherize = (req, res, next) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({
-      success: false,
-      message: "You are not authorized to perform this action",
-    });
-  }
-  next();
-};
+
